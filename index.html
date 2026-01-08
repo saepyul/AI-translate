@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 영어사전 (gpt-5-mini)</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        h2 { text-align: center; }
+        .container { display: flex; gap: 20px; flex: 1; }
+        .box { flex: 1; display: flex; flex-direction: column; gap: 10px; border: 1px solid #ccc; padding: 20px; border-radius: 10px; }
+        textarea { flex: 1; padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px; resize: none; }
+        button { padding: 15px; font-size: 18px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:disabled { background-color: #ccc; }
+    </style>
+</head>
+<body>
+    <h2>📚 AI 스마트 영어사전</h2>
+    <div class="container">
+        <div class="box">
+            <h3>English (영어)</h3>
+            <textarea id="enInput" placeholder="English text here..."></textarea>
+            <button id="btnEnToKo">한글로 번역 (En → Ko) →</button>
+        </div>
+
+        <div class="box">
+            <h3>Korean (한글)</h3>
+            <textarea id="koInput" placeholder="한글을 입력하세요..."></textarea>
+            <button id="btnKoToEn">← 영어로 번역 (Ko → En)</button>
+        </div>
+    </div>
+
+    <script>
+        const WORKER_URL = "https://delicate-sea-d954.saepyul.workers.dev/";
+
+        async function askAI(message) {
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: message }) // JSON 덩어리로 포장
+                });
+                const data = await res.json();
+                return data.reply; // AI의 답변만 추출
+            } catch (e) {
+                return "에러 발생: " + e.message;
+            }
+        }
+
+        // 영어 -> 한글 번역
+        document.getElementById("btnEnToKo").onclick = async () => {
+            const text = document.getElementById("enInput").value;
+            if (!text) return;
+            document.getElementById("btnEnToKo").disabled = true;
+            const prompt = `Translate the following English text into natural Korean: "${text}"`;
+            const result = await askAI(prompt);
+            document.getElementById("koInput").value = result;
+            document.getElementById("btnEnToKo").disabled = false;
+        };
+
+        // 한글 -> 영어 번역
+        document.getElementById("btnKoToEn").onclick = async () => {
+            const text = document.getElementById("koInput").value;
+            if (!text) return;
+            document.getElementById("btnKoToEn").disabled = true;
+            const prompt = `다음 한국어 문장을 자연스러운 영어로 번역해줘: "${text}"`;
+            const result = await askAI(prompt);
+            document.getElementById("enInput").value = result;
+            document.getElementById("btnKoToEn").disabled = false;
+        };
+    </script>
+</body>
+</html>
